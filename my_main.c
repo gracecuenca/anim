@@ -71,7 +71,12 @@ void first_pass() {
   //they must be extern variables
   extern int num_frames;
   extern char name[128];
-
+  //setup
+  int i;
+  for(i = 0; i < lastop; i++){
+    if(command.opcode == )
+  }
+  
 }
 
 /*======== struct vary_node ** second_pass() ==========
