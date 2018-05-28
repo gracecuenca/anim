@@ -125,7 +125,24 @@ void first_pass() {
   appropirate value.
   ====================*/
 struct vary_node ** second_pass() {
-  return NULL;
+  //inits
+  struct vary_node ** knobs = (struct vary node **) calloc(sizeof(struct vary_node*), num_frames);
+  int i;
+
+  for(i = 0; i < lastop; i++){
+
+    if(op[i].opcode == VARY){
+      int current_frame;
+
+      //need another loop to traverse through the array of linked lists
+      for(current_frame = 0; current_frame < num_frames; current_frame++){
+        
+      }
+
+    }
+
+
+  }
 }
 
 /*======== void print_knobs() ==========
