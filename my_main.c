@@ -69,15 +69,41 @@
 void first_pass() {
   //in order to use name and num_frames throughout
   //they must be extern variables
-  extern int num_frames;
+  extern int num_frames = 1;
   extern char name[128];
-  //setup
+
+  //default name
+  strcpy(name, "default");
+
+  //more setup
+  int num_varies = 0;
   int i;
+
   for(i = 0; i < lastop; i++){
-    if(command.opcode == )
+
+    if(op[i].opcode == FRAMES){
+      num_frames = op[i].op.frames.num_frames;
+    }
+    else if(op[i].opcode == BASENAME){
+      strcpy(name, op[i].op.basename.p->name);
+    }
+    else if (!varied && op[i].opcode == VARY){
+      varied = 1;
+    }
+
+    //not an animation but vary was set
+    if(num_frames == 1 && varied){
+      printf("Not enough frames specified.\n");
+      exit(0);
+    }
+
+    //if the basename to the file is not entered
+    if(num_frames != 1 && !strcmp(name, "default")){
+      printf("Basename not specified so it is 'default'\n");
+    }
   }
-  
-}
+
+}//end first pass
 
 /*======== struct vary_node ** second_pass() ==========
   Inputs:
