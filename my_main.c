@@ -87,12 +87,12 @@ void first_pass() {
     else if(op[i].opcode == BASENAME){
       strcpy(name, op[i].op.basename.p->name);
     }
-    else if (!varied && op[i].opcode == VARY){
-      varied = 1;
+    else if (!num_varies && op[i].opcode == VARY){
+      num_varies = 1;
     }
 
     //not an animation but vary was set
-    if(num_frames == 1 && varied){
+    if(num_frames == 1 && num_varies){
       printf("Not enough frames specified.\n");
       exit(0);
     }
@@ -101,6 +101,8 @@ void first_pass() {
     if(num_frames != 1 && !strcmp(name, "default")){
       printf("Basename not specified so it is 'default'\n");
     }
+
+    printf("First pass completed successfully.\n");
   }
 
 }//end first pass
@@ -126,23 +128,32 @@ void first_pass() {
   ====================*/
 struct vary_node ** second_pass() {
   //inits
-  struct vary_node ** knobs = (struct vary node **) calloc(sizeof(struct vary_node*), num_frames);
+  //only focusing on vary command
+  struct vary_node ** knobs = (struct vary_node*)calloc(sizeof(struct vary_node*), num_frames);
   int i;
+  int current_frame;
 
   for(i = 0; i < lastop; i++){
 
     if(op[i].opcode == VARY){
-      int current_frame;
+
+      double start = op[i].vary.start_frame;
+      double end = op[i].vary.end_frame;
+      double step = (op[i].op.vary.end_val - op[i].op.vary.start_val)/(end-start);
 
       //need another loop to traverse through the array of linked lists
-      for(current_frame = 0; current_frame < num_frames; current_frame++){
-        
+      //adding on to linked lists
+      for(current_frame = start; current_frame < end_frame; current_frame++){
+        struct vary_node * single = (struct vary_node*)malloc(sizeof(struct vary_node));
+        strcpy(single->name, op[i].op.vary.p->name);
+
+        single->value = op[i].op.vary.start_val + (current_frame - start_frame) * step;
+        single -> next = knobs[current_frame];
+        knobs[current_frame] = single;
       }
-
     }
-
-
   }
+  return knobs;
 }
 
 /*======== void print_knobs() ==========
@@ -249,6 +260,23 @@ void my_main() {
   tmp = new_matrix(4, 1000);
   clear_screen( t );
   clear_zbuffer(zb);
+
+  first_pass();
+  struct vary_node ** knobs = second_pass();
+  int current;
+  struct vary_node * node;
+
+  for(current = 0; current < num_frames; current++){
+    node = knobs[current];
+    while(!node){
+      set_value(lookup_symbol(node->name), node->value);
+      node = node->next;
+    }
+  }
+
+  printf("printing current knobs\n");
+  print_knobs();
+
 
   for (i=0;i<lastop;i++) {
     //printf("%d: ",i);
