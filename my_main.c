@@ -66,11 +66,15 @@
   to some default value, and print out a message
   with the name being used.
   ====================*/
+
+  int num_frames;
 void first_pass() {
   //in order to use name and num_frames throughout
   //they must be extern variables
-  extern int num_frames = 1;
+  //extern int num_frames;
   extern char name[128];
+
+  num_frames = 1;
 
   //default name
   strcpy(name, "default");
@@ -129,7 +133,7 @@ void first_pass() {
 struct vary_node ** second_pass() {
   //inits
   //only focusing on vary command
-  struct vary_node ** knobs = (struct vary_node*)calloc(sizeof(struct vary_node*), num_frames);
+  struct vary_node ** knobs = calloc(num_frames, sizeof(struct vary_node));
   int i;
   int current_frame;
 
@@ -137,19 +141,20 @@ struct vary_node ** second_pass() {
 
     if(op[i].opcode == VARY){
 
-      double start = op[i].vary.start_frame;
-      double end = op[i].vary.end_frame;
+      double start = op[i].op.vary.start_frame;
+      double end = op[i].op.vary.end_frame;
       double step = (op[i].op.vary.end_val - op[i].op.vary.start_val)/(end-start);
 
       //need another loop to traverse through the array of linked lists
       //adding on to linked lists
-      for(current_frame = start; current_frame < end_frame; current_frame++){
+      for(current_frame = start; current_frame < end; current_frame++){
         struct vary_node * single = (struct vary_node*)malloc(sizeof(struct vary_node));
         strcpy(single->name, op[i].op.vary.p->name);
 
-        single->value = op[i].op.vary.start_val + (current_frame - start_frame) * step;
+        single->value = op[i].op.vary.start_val + (current_frame - start) * step;
         single -> next = knobs[current_frame];
         knobs[current_frame] = single;
+
       }
     }
   }
@@ -263,12 +268,13 @@ void my_main() {
 
   first_pass();
   struct vary_node ** knobs = second_pass();
+
   int current;
   struct vary_node * node;
 
   for(current = 0; current < num_frames; current++){
     node = knobs[current];
-    while(!node){
+    while(node != NULL){
       set_value(lookup_symbol(node->name), node->value);
       node = node->next;
     }
@@ -276,7 +282,6 @@ void my_main() {
 
   printf("printing current knobs\n");
   print_knobs();
-
 
   for (i=0;i<lastop;i++) {
     //printf("%d: ",i);
@@ -387,6 +392,11 @@ void my_main() {
         if (op[i].op.move.p != NULL)
           {
             printf("\tknob: %s",op[i].op.move.p->name);
+            SYMTAB * c = lookup_symbol(op[i].op.move.p->name);
+            knob_value = c->s.value;
+            xval *= knob_value;
+            yval *= knob_value;
+            zval *= knob_value;
           }
         tmp = make_translate( xval, yval, zval );
         matrix_mult(peek(systems), tmp);
@@ -402,6 +412,11 @@ void my_main() {
         if (op[i].op.scale.p != NULL)
           {
             printf("\tknob: %s",op[i].op.scale.p->name);
+            SYMTAB * c = lookup_symbol(op[i].op.scale.p->name);
+            knob_value = c->s.value;
+            xval *= knob_value;
+            yval *= knob_value;
+            zval *= knob_value;
           }
         tmp = make_scale( xval, yval, zval );
         matrix_mult(peek(systems), tmp);
@@ -416,6 +431,9 @@ void my_main() {
         if (op[i].op.rotate.p != NULL)
           {
             printf("\tknob: %s",op[i].op.rotate.p->name);
+            SYMTAB *c = lookup_symbol(op[i].op.rotate.p->name);
+            knob_value = c->s.value;
+            theta *= knob_value;
           }
         theta*= (M_PI / 180);
         if (op[i].op.rotate.axis == 0 )
@@ -448,4 +466,17 @@ void my_main() {
       } //end opcode switch
     printf("\n");
   }//end operation loop
+
+  char path[128];
+  sprintf(path, "anim/%s%03d", name, i);
+
+  //cleanup
+  save_extension(t, path);
+  clear_zbuffer(zb);
+  clear_screen(t);
+  free_stack(systems);
+  systems = new_stack();
+  free(tmp);
+  tmp = new_matrix(4, 1000);
+  if(num_frames > 0){make_animation(name);}
 }
