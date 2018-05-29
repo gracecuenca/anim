@@ -43,6 +43,7 @@ stack.o: stack.c stack.h matrix.h
 
 run:
 	./mdl simple_anim.mdl
+	animate simple.gif
 
 clean:
 	rm y.tab.c y.tab.h
