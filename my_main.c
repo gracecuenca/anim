@@ -270,7 +270,6 @@ void my_main() {
   struct vary_node ** knobs = second_pass();
 
   int x;
-
   for(x = 0; x < num_frames; x++){
     SYMTAB *c;
     struct vary_node * node = knobs[x];
@@ -409,8 +408,7 @@ void my_main() {
           zval = op[i].op.scale.d[2];
           printf("Scale: %6.2f %6.2f %6.2f",
                  xval, yval, zval);
-          if (op[i].op.scale.p != NULL)
-            {
+          if (op[i].op.scale.p != NULL){
               printf("\tknob: %s",op[i].op.scale.p->name);
               SYMTAB * c = lookup_symbol(op[i].op.scale.p->name);
               knob_value = c->s.value;
@@ -428,8 +426,7 @@ void my_main() {
           theta = op[i].op.rotate.degrees;
           printf("Rotate: axis: %6.2f degrees: %6.2f",
                  xval, theta);
-          if (op[i].op.rotate.p != NULL)
-            {
+          if (op[i].op.rotate.p != NULL){
               printf("\tknob: %s",op[i].op.rotate.p->name);
               SYMTAB *c = lookup_symbol(op[i].op.rotate.p->name);
               knob_value = c->s.value;
